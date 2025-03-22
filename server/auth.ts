@@ -79,8 +79,8 @@ export function setupAuth(app: Express) {
       // Validate user data
       const userSchema = insertUserSchema.extend({
         password: z.string().min(6, "Password must be at least 6 characters"),
-        confirmPassword: z.string(),
-      }).refine((data) => data.password === data.confirmPassword, {
+        confirmPassword: z.string().optional(),
+      }).refine((data) => !data.confirmPassword || data.password === data.confirmPassword, {
         message: "Passwords don't match",
         path: ["confirmPassword"],
       });
@@ -96,9 +96,10 @@ export function setupAuth(app: Express) {
       // Hash password before storing
       const hashedPassword = await hashPassword(validatedData.password);
       
-      // Create user
+      // Create user (remove confirmPassword if present)
+      const { confirmPassword, ...userDataWithoutConfirm } = validatedData;
       const user = await storage.createUser({
-        ...validatedData,
+        ...userDataWithoutConfirm,
         password: hashedPassword,
       });
 

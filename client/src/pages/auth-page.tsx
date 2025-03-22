@@ -96,7 +96,8 @@ export default function AuthPage() {
   
   // Handle register form submission
   const onRegisterSubmit = (data: RegisterFormValues) => {
-    const { confirmPassword, terms, ...userData } = data;
+    // Include confirmPassword for validation on the server side
+    const { terms, ...userData } = data;
     registerMutation.mutate(userData);
   };
   
