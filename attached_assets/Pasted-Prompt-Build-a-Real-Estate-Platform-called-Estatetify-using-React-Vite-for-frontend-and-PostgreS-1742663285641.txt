@@ -1,0 +1,90 @@
+Prompt:
+"Build a Real Estate Platform called Estatetify using React (Vite) for frontend and PostgreSQL for backend database. The platform allows users to buy, sell, and chat in real time. Users can sign up as Buyers or Sellers, and an Admin Panel is available for managing listings.
+
+Features & Flow:
+1. Authentication (JWT-based Auth)
+Users sign up as Buyers or Sellers during registration.
+
+JWT authentication (JSON Web Tokens) for secure login & session management.
+
+User passwords are hashed before storing in PostgreSQL.
+
+2. Seller's Dashboard (Navbar: Home, My Sells, Inbox)
+Home Page: Sellers can view all real estate listings (same as buyers).
+
+My Sells:
+
+Sellers can upload, update, and delete their listings.
+
+Required Fields:
+
+Title, Address, Price, Contact Number, Property Type (Plot, House, Apartment, Land), Description, and Up to 4 Images.
+
+Images stored in a local folder or cloud storage (like AWS S3) and linked in the PostgreSQL database.
+
+Inbox:
+
+Real-time chat with buyers.
+
+Messages stored in PostgreSQL with timestamps.
+
+3. Buyer's Dashboard (Navbar: Home, Inbox)
+Home Page:
+
+Buyers can search & filter properties based on location, type, price range, and availability.
+
+Listings appear as cards with a short description and one image.
+
+Clicking "View Details" redirects to a detailed property page.
+
+"Chat with Seller" button allows buyers to start a chat in the Inbox.
+
+Inbox:
+
+Buyers can chat with sellers in real time.
+
+4. Admin Panel (/admin Route - Password Protected)
+Accessible via /admin, asks for a password before access.
+
+Admin can manage all properties, delete any listing, and monitor chats if needed.
+
+5. Tech Stack
+Frontend: React (Vite), TailwindCSS for styling.
+
+Backend: Node.js (Express) with PostgreSQL.
+
+File Storage: Local storage or AWS S3 for images.
+
+Authentication: JWT-based auth with password hashing (bcrypt).
+
+Routing: React Router for frontend, Express Router for backend API.
+
+State Management: Zustand or Redux.
+
+Security: Middleware for authentication & role-based access.
+
+6. Additional Notes
+Real-time messaging stored in PostgreSQL.
+
+Lazy loading for images for better performance.
+
+Listings stored in PostgreSQL with proper schema for properties & users.
+
+Optimized database queries for fast search & filtering.
+
+Responsive UI/UX for all devices.
+
+7. Project Structure
+Frontend (React)
+Pages: Home, My Sells, Inbox, Admin, Login, Signup, Property Details.
+
+Components: Navbar, PropertyCard, ChatBox, Filters, UploadForm.
+
+Backend (Node.js + PostgreSQL)
+Authentication API: Register/Login with JWT & password hashing.
+
+Property API: CRUD for property listings.
+
+Chat API: Real-time messaging stored in PostgreSQL.
+
+Admin API: Delete/manage listings & users.
