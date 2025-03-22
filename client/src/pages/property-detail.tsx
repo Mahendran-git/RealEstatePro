@@ -31,11 +31,10 @@ export default function PropertyDetail() {
     data,
     isLoading,
     error,
-  } = useQuery<PropertyDetailResponse>({
+  } = useQuery<Property>({
     queryKey: [`/api/properties/${id}`],
-    queryFn: async ({ queryKey }) => {
-      const [path] = queryKey;
-      const res = await fetch(path, {
+    queryFn: async () => {
+      const res = await fetch(`/api/properties/${id}`, {
         credentials: "include",
       });
 
@@ -46,15 +45,39 @@ export default function PropertyDetail() {
       return res.json();
     },
   });
+  
+  // Get seller details based on property's sellerId
+  const {
+    data: seller,
+    isLoading: isSellerLoading,
+  } = useQuery<Omit<User, "password">>({
+    queryKey: [`/api/users/${data?.sellerId}`],
+    queryFn: async () => {
+      if (!data?.sellerId) {
+        throw new Error("No seller ID available");
+      }
+      
+      const res = await fetch(`/api/users/${data.sellerId}`, {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch seller details");
+      }
+
+      return res.json();
+    },
+    enabled: !!data?.sellerId, // Only run this query when we have a sellerId
+  });
 
   const startChatMutation = useMutation({
     mutationFn: async (message: string) => {
-      if (!data) return null;
+      if (!data || !seller) return null;
 
       // First create or get existing chat
       const chatRes = await apiRequest("POST", "/api/chats", {
         buyerId: user?.id,
-        sellerId: data.seller.id,
+        sellerId: seller.id,
         propertyId: parseInt(id),
       });
 
@@ -62,7 +85,7 @@ export default function PropertyDetail() {
 
       // Then send message if provided
       if (message) {
-        await apiRequest("POST", `/api/chats/${chat.id}/messages`, {
+        await apiRequest("POST", `/api/messages`, {
           chatId: chat.id,
           senderId: user?.id,
           content: message,
@@ -134,7 +157,7 @@ export default function PropertyDetail() {
     startChatMutation.mutate("");
   };
 
-  if (isLoading) {
+  if (isLoading || isSellerLoading) {
     return (
       <MainLayout>
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 flex justify-center items-center min-h-[50vh]">
@@ -144,7 +167,7 @@ export default function PropertyDetail() {
     );
   }
 
-  if (error || !data) {
+  if (error || !data || !seller) {
     return (
       <MainLayout>
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -161,7 +184,7 @@ export default function PropertyDetail() {
     );
   }
 
-  const { property, seller } = data;
+  const property = data;
   const isCurrentUserSeller = user?.id === seller.id;
 
   return (
@@ -187,7 +210,7 @@ export default function PropertyDetail() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                {property.images.slice(1, 3).map((image, index) => (
+                {property.images.slice(1, 3).map((image: string, index: number) => (
                   <div key={index} className="h-44 overflow-hidden rounded-lg">
                     <img
                       src={image}

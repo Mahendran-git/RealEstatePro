@@ -257,6 +257,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.post("/api/messages", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { chatId, content } = req.body;
+      const senderId = req.user.id;
+      
+      // Validate that the user is part of this chat
+      const chat = await storage.getChatById(parseInt(chatId));
+      if (!chat) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+      
+      if (chat.buyerId !== senderId && chat.sellerId !== senderId) {
+        return res.status(403).json({ message: "You are not a participant in this chat" });
+      }
+      
+      const messageData = {
+        chatId: parseInt(chatId),
+        senderId,
+        content
+      };
+      
+      const validatedData = insertMessageSchema.parse(messageData);
+      const message = await storage.createMessage(validatedData);
+      
+      res.status(200).json(message);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+  
+  // User routes
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password before sending the user data
+      const { password, ...userData } = user;
+      res.json(userData);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
+    }
+  });
+  
   // Admin routes
   app.get("/api/admin/properties", async (req, res) => {
     try {
