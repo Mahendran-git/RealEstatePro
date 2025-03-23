@@ -70,7 +70,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   const applyFilters = () => {
     onFilterChange({
       search: searchQuery,
-      propertyType,
+      propertyType: propertyType === "all" ? "" : propertyType,
       minPrice: priceRange[0],
       maxPrice: priceRange[1],
       location,
@@ -118,7 +118,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
                 <SelectValue placeholder="Property Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="plot">Plot</SelectItem>
                 <SelectItem value="house">House</SelectItem>
                 <SelectItem value="apartment">Apartment</SelectItem>
@@ -131,11 +131,11 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
             <Select 
               value={
                 priceRange[0] === 0 && priceRange[1] === 2000000
-                  ? ""
+                  ? "any"
                   : `${priceRange[0]}-${priceRange[1]}`
               }
               onValueChange={(value) => {
-                if (!value) {
+                if (value === "any") {
                   setPriceRange([0, 2000000]);
                   return;
                 }
@@ -147,7 +147,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
                 <SelectValue placeholder="Price Range" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Price</SelectItem>
+                <SelectItem value="any">Any Price</SelectItem>
                 <SelectItem value="0-100000">$0 - $100,000</SelectItem>
                 <SelectItem value="100000-300000">$100,000 - $300,000</SelectItem>
                 <SelectItem value="300000-600000">$300,000 - $600,000</SelectItem>
@@ -207,7 +207,7 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
                       <SelectValue placeholder="Select property type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Types</SelectItem>
+                      <SelectItem value="all">All Types</SelectItem>
                       <SelectItem value="plot">Plot</SelectItem>
                       <SelectItem value="house">House</SelectItem>
                       <SelectItem value="apartment">Apartment</SelectItem>
