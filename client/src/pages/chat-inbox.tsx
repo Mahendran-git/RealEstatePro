@@ -101,10 +101,10 @@ export default function ChatInbox() {
       return response.json();
     },
     onSuccess: (newMessage) => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify(newMessage));
-      }
-      queryClient.invalidateQueries({ queryKey: [`/api/chats/${newMessage.chatId}/messages`] });
+      // Don't send WebSocket message since the server will broadcast it
+      queryClient.setQueryData([`/api/chats/${newMessage.chatId}/messages`], (oldData: Message[] | undefined) => {
+        return oldData ? [...oldData, newMessage] : [newMessage];
+      });
     },
     onError: (error) => {
       toast({
