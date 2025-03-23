@@ -68,6 +68,14 @@ export default function ChatInbox() {
   } = useQuery<ExtendedChat[]>({
     queryKey: ["/api/chats"],
     enabled: !!user,
+    retry: 1,
+    onError: (error) => {
+      toast({
+        title: "Error Loading Chats",
+        description: "Please try signing in again",
+        variant: "destructive",
+      });
+    }
   });
 
   const {
@@ -135,7 +143,7 @@ export default function ChatInbox() {
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="bg-red-50 p-6 rounded-lg text-center">
             <h2 className="text-xl font-bold text-red-800 mb-2">Error Loading Chats</h2>
-            <p className="text-red-700">Failed to load your conversations. Please try again later.</p>
+            <p className="text-red-700">Please sign in to view your conversations.</p>
           </div>
         </div>
       </MainLayout>
