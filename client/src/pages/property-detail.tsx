@@ -120,11 +120,8 @@ export default function PropertyDetail() {
           description: "Your message has been sent to the seller.",
         });
       }
-      
-      if (!message) {
-        // If no message, navigate to inbox with chat selected
-        navigate(`/inbox?chatId=${chat?.id}`);
-      }
+      // Always navigate to inbox with chat selected
+      navigate(`/inbox?chatId=${chat?.id}`);
     },
     onError: (error) => {
       toast({
