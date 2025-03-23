@@ -179,10 +179,7 @@ export default function ChatInterface({
                 <h3 className="text-sm font-medium text-neutral-900">
                   {otherUser?.firstName} {otherUser?.lastName}
                 </h3>
-                <p className="text-xs text-neutral-500">
-                  {user.role === 'seller' ? 'Buyer • ' : 'Seller • '}
-                  {activeChat.property.title}
-                </p>
+                <p className="text-xs text-neutral-500">{activeChat.property.title}</p>
               </div>
             </div>
           </div>
