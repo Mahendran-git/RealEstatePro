@@ -30,6 +30,17 @@ export default function HomePage() {
     maxPrice: 0,
     location: "",
   });
+  
+  // Add fallback for when auth state isn't ready yet
+  if (!user) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   // Fetch properties based on filters and pagination
   const {
@@ -57,17 +68,26 @@ export default function HomePage() {
         minPrice,
         maxPrice,
         location,
-      ] = queryKey;
+      ] = queryKey as [
+        string, 
+        number, 
+        number, 
+        string, 
+        string, 
+        number, 
+        number, 
+        string
+      ];
 
       const params = new URLSearchParams();
-      params.append("page", page.toString());
-      params.append("limit", limit.toString());
+      params.append("page", String(page));
+      params.append("limit", String(limit));
       
-      if (search) params.append("search", search.toString());
-      if (propertyType) params.append("type", propertyType.toString());
-      if (minPrice > 0) params.append("minPrice", minPrice.toString());
-      if (maxPrice > 0) params.append("maxPrice", maxPrice.toString());
-      if (location) params.append("location", location.toString());
+      if (search) params.append("search", String(search));
+      if (propertyType) params.append("type", String(propertyType));
+      if (minPrice > 0) params.append("minPrice", String(minPrice));
+      if (maxPrice > 0) params.append("maxPrice", String(maxPrice));
+      if (location) params.append("location", String(location));
 
       const res = await fetch(`/api/properties?${params.toString()}`, {
         credentials: "include",

@@ -26,6 +26,17 @@ export default function PropertyDetail() {
   const [, navigate] = useLocation();
   const [message, setMessage] = useState("");
   const [messageSent, setMessageSent] = useState(false);
+  
+  // Add fallback for when auth state isn't ready yet
+  if (!user) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   // First fetch the property details
   const {
