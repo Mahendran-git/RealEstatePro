@@ -157,9 +157,19 @@ export default function PropertyForm({ property, onBack }: PropertyFormProps) {
 
       // Invalidate queries to reflect changes
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/properties/seller"] 
-      });
+      
+      // Get the user id from local storage to ensure we're invalidating the right query
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user?.id) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/properties/seller/${user.id}`] 
+        });
+      } else {
+        // Fallback to invalidate all seller properties queries
+        queryClient.invalidateQueries({ 
+          queryKey: ["/api/properties/seller"] 
+        });
+      }
 
       // Redirect to the seller dashboard
       navigate("/seller/dashboard");

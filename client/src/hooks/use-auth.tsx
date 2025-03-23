@@ -58,6 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Store user in localStorage for persistence
+      localStorage.setItem('user', JSON.stringify(user));
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.firstName}!`,
@@ -79,6 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Store user in localStorage for persistence
+      localStorage.setItem('user', JSON.stringify(user));
       toast({
         title: "Registration successful",
         description: `Welcome to Estatetify, ${user.firstName}!`,
@@ -100,6 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      // Clear user from localStorage
+      localStorage.removeItem('user');
       toast({
         title: "Logout successful",
         description: "You have been logged out",
