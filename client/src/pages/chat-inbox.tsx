@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,8 +23,8 @@ export default function ChatInbox() {
   const isMobile = useIsMobile();
   const [location] = useLocation();
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
   
-  // Get chat ID from URL query parameter if present
   const query = new URLSearchParams(location.split("?")[1] || "");
   const chatIdFromUrl = query.get("chatId");
   
@@ -33,7 +34,33 @@ export default function ChatInbox() {
     }
   }, [chatIdFromUrl]);
 
-  // Fetch user's chats
+  useEffect(() => {
+    if (!user) return;
+
+    const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/chat?userId=${user.id}`);
+    wsRef.current = ws;
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      queryClient.invalidateQueries({ queryKey: [`/api/chats/${message.chatId}/messages`] });
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to chat server",
+        variant: "destructive",
+      });
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, [user, toast]);
+
   const {
     data: chats,
     isLoading: isChatsLoading,
@@ -43,7 +70,6 @@ export default function ChatInbox() {
     enabled: !!user,
   });
 
-  // Fetch messages for active chat
   const {
     data: messages,
     isLoading: isMessagesLoading,
@@ -51,10 +77,9 @@ export default function ChatInbox() {
   } = useQuery<Message[]>({
     queryKey: [`/api/chats/${activeChatId}/messages`],
     enabled: !!activeChatId,
-    refetchInterval: 5000, // Poll every 5 seconds for new messages
+    refetchInterval: 0, // Disable polling since we're using WebSocket
   });
 
-  // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ chatId, content }: { chatId: number; content: string }) => {
       if (!user) throw new Error("User not authenticated");
@@ -67,11 +92,11 @@ export default function ChatInbox() {
       
       return response.json();
     },
-    onSuccess: () => {
-      // Invalidate the messages query to refetch
-      if (activeChatId) {
-        queryClient.invalidateQueries({ queryKey: [`/api/chats/${activeChatId}/messages`] });
+    onSuccess: (newMessage) => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify(newMessage));
       }
+      queryClient.invalidateQueries({ queryKey: [`/api/chats/${newMessage.chatId}/messages`] });
     },
     onError: (error) => {
       toast({
@@ -91,7 +116,7 @@ export default function ChatInbox() {
   };
 
   if (!user) {
-    return null; // Protected route will handle redirect
+    return null;
   }
 
   if (isChatsLoading) {
