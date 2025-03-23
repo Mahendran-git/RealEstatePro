@@ -41,6 +41,11 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  
+  // Try to get the user from localStorage first
+  const localUser = localStorage.getItem('user');
+  const parsedLocalUser = localUser ? JSON.parse(localUser) : null;
+  
   const {
     data: user,
     error,
@@ -49,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
+    initialData: parsedLocalUser, // Use localStorage data as initial data
   });
 
   const loginMutation = useMutation({
