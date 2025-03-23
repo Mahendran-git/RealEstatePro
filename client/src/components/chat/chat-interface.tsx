@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ export default function ChatInterface({
   const { user } = useAuth();
   const [message, setMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   // Scroll to bottom of messages when messages update
   useEffect(() => {
@@ -42,17 +43,32 @@ export default function ChatInterface({
     }
   }, [messages]);
   
+  // Focus the input field when the component mounts or the active chat changes
+  useEffect(() => {
+    if (activeChatId && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [activeChatId]);
+  
   if (!user) return null;
   
   const activeChat = chats.find(chat => chat.id === activeChatId);
   
-  const handleSendMessage = (e: React.FormEvent) => {
+  // Using useCallback to prevent recreating the handler on every render
+  const handleSendMessage = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!activeChatId || !message.trim()) return;
     
     onSendMessage(activeChatId, message);
     setMessage("");
-  };
+    
+    // Refocus the input after sending
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 0);
+  }, [activeChatId, message, onSendMessage]);
   
   // Determine the other user in the chat (buyer or seller)
   const getOtherUser = (chat: typeof chats[0]) => {
@@ -218,9 +234,11 @@ export default function ChatInterface({
           <form onSubmit={handleSendMessage} className="flex items-end">
             <div className="flex-1 mr-3">
               <Input
+                ref={inputRef}
                 placeholder="Type a message..."
                 value={message}
                 onChange={e => setMessage(e.target.value)}
+                autoFocus
                 className="min-h-[42px]"
               />
             </div>
