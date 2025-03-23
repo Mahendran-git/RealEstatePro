@@ -27,6 +27,7 @@ export default function PropertyDetail() {
   const [message, setMessage] = useState("");
   const [messageSent, setMessageSent] = useState(false);
 
+  // First fetch the property details
   const {
     data,
     isLoading,
@@ -44,12 +45,15 @@ export default function PropertyDetail() {
 
       return res.json();
     },
+    retry: 1,
+    staleTime: 30000, // Keep data fresh for 30 seconds
   });
   
   // Get seller details based on property's sellerId
   const {
     data: seller,
     isLoading: isSellerLoading,
+    error: sellerError,
   } = useQuery<Omit<User, "password">>({
     queryKey: [`/api/users/${data?.sellerId}`],
     queryFn: async () => {
@@ -68,6 +72,8 @@ export default function PropertyDetail() {
       return res.json();
     },
     enabled: !!data?.sellerId, // Only run this query when we have a sellerId
+    retry: 1,
+    staleTime: 30000, // Keep data fresh for 30 seconds
   });
 
   const startChatMutation = useMutation({
@@ -157,27 +163,148 @@ export default function PropertyDetail() {
     startChatMutation.mutate("");
   };
 
-  if (isLoading || isSellerLoading) {
+  // Show loading state for initial data fetch
+  if (isLoading) {
     return (
       <MainLayout>
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 flex justify-center items-center min-h-[50vh]">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <Button variant="ghost" onClick={() => navigate("/")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to listings
+            </Button>
+          </div>
+          <div className="bg-white shadow rounded-lg p-8 flex justify-center items-center min-h-[50vh]">
+            <div className="text-center">
+              <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-neutral-600">Loading property details...</p>
+            </div>
+          </div>
         </div>
       </MainLayout>
     );
   }
 
-  if (error || !data || !seller) {
+  // Show error state if primary data fetch fails
+  if (error || !data) {
     return (
       <MainLayout>
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="bg-red-50 p-6 rounded-lg text-center">
+          <div className="mb-6">
+            <Button variant="ghost" onClick={() => navigate("/")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to listings
+            </Button>
+          </div>
+          <div className="bg-red-50 p-8 rounded-lg text-center">
             <h2 className="text-xl font-bold text-red-800 mb-2">Error loading property</h2>
             <p className="text-red-700 mb-4">This property might not exist or has been removed.</p>
             <Button onClick={() => navigate("/")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Listings
             </Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+  
+  // If property loaded but seller data is still loading
+  if (isSellerLoading) {
+    return (
+      <MainLayout>
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <Button variant="ghost" onClick={() => navigate("/")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to listings
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Property details */}
+            <div className="lg:col-span-2">
+              <Card className="p-6 mb-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h1 className="text-2xl font-bold text-neutral-900 mb-1">{data.title}</h1>
+                    <p className="text-neutral-600 flex items-center mb-1">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      {data.address}
+                    </p>
+                    <p className="text-xl font-semibold text-neutral-900">{formatCurrency(data.price)}</p>
+                  </div>
+                </div>
+                <div className="border-t border-neutral-200 pt-6 mt-4">
+                  <h2 className="text-lg font-semibold text-neutral-900 mb-3">Description</h2>
+                  <p className="text-neutral-700 whitespace-pre-line">{data.description}</p>
+                </div>
+              </Card>
+            </div>
+            
+            {/* Contact seller section - loading state */}
+            <div className="lg:col-span-1">
+              <Card className="p-6 mb-6">
+                <h2 className="text-lg font-semibold text-neutral-900 mb-4">Contact Seller</h2>
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+  
+  // If property loaded but seller data failed to load
+  if (!seller) {
+    return (
+      <MainLayout>
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <Button variant="ghost" onClick={() => navigate("/")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to listings
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Property details */}
+            <div className="lg:col-span-2">
+              <Card className="p-6 mb-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h1 className="text-2xl font-bold text-neutral-900 mb-1">{data.title}</h1>
+                    <p className="text-neutral-600 flex items-center mb-1">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      {data.address}
+                    </p>
+                    <p className="text-xl font-semibold text-neutral-900">{formatCurrency(data.price)}</p>
+                  </div>
+                </div>
+                <div className="border-t border-neutral-200 pt-6 mt-4">
+                  <h2 className="text-lg font-semibold text-neutral-900 mb-3">Description</h2>
+                  <p className="text-neutral-700 whitespace-pre-line">{data.description}</p>
+                </div>
+              </Card>
+            </div>
+            
+            {/* Contact seller section - error state */}
+            <div className="lg:col-span-1">
+              <Card className="p-6 mb-6">
+                <h2 className="text-lg font-semibold text-neutral-900 mb-4">Contact Seller</h2>
+                <div className="bg-red-50 p-4 rounded-md">
+                  <p className="text-red-700 text-sm">Could not load seller information. Please try again later.</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={() => window.location.reload()}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              </Card>
+            </div>
           </div>
         </div>
       </MainLayout>
